@@ -1,25 +1,39 @@
 language: node_js
 
+# Version number
 node_js:
-  - 0.10.25
+  - 0.12
 
-services:
-  - mysql
-
-# For xunit-file module to put results in shippable folder
 env:
-  - XUNIT_FILE=shippable/testresults/result.xml
+  global:
+    - FOO=FUBU
 
-# Make folders for the reports, and create the SQL db
-before_script:
-  - mkdir -p shippable/testresults
-  - mkdir -p shippable/codecoverage
-  - mysql -e 'create database if not exists test;'
+  matrix:
+    - M1=ONE
 
-script:
-  - npm test
+build:
+  pre_ci:
+    - docker build -t=shippabledocker/shiphitchcock1_sample_node .
 
-# Generate coverage report with istanbul
-after_script:
-  - ./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha test.js -- -u tdd
-  - ./node_modules/.bin/istanbul report cobertura --dir  shippable/codecoverage/
+  pre_ci_boot:
+    image_name: shippabledocker/shiphitchcock1_sample_node
+    image_tag: latest
+    pull: false
+    options: '--privileged=true --net=bridge -e FOO=true -e BOO=false'
+
+  ci:
+    - ps -eax
+    - ls -al
+   # - XUNIT_FILE=shippable/testresults/result.xml
+    - mysql -e 'create database if not exists test;'
+
+  post_ci:
+    - docker push shippabledocker/shiphitchcock1_sample_node
+
+integrations:
+  hub:
+    - integrationName: ship-docker
+      type: docker
+      branches:
+        only:
+          - master 
