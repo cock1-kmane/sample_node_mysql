@@ -10,6 +10,9 @@ env:
 
   matrix:
     - M1=ONE
+    
+services:
+  - mysql
 
 build:
  # pre_ci:
